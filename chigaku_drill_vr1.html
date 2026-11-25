@@ -1,0 +1,637 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>地学ドリル｜天気・宇宙</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+:root{
+  --bg:#0d0d0d;--card:#1a1a1a;--card2:#222;--border:#333;
+  --text:#f0f0f0;--text2:#888;--text3:#555;
+  --chg:#4fc3f7;--radius:14px;
+  --ok:#4caf50;--wrong:#ef5350;
+  --s1:#4fc3f7;--s2:#ffa726;--s3:#ab47bc;
+}
+html,body{height:100%;background:var(--bg);color:var(--text);font-family:-apple-system,sans-serif;overflow:hidden;}
+body{display:flex;flex-direction:column;height:100dvh;padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);}
+
+/* ===== SCREENS ===== */
+.screen{display:none;flex-direction:column;flex:1;overflow:hidden;}
+.screen.active{display:flex;}
+
+/* ===== TOP ===== */
+#top{align-items:center;justify-content:center;gap:16px;padding:20px 16px;}
+.top-title{font-size:22px;font-weight:900;letter-spacing:1px;margin-bottom:4px;}
+.top-title span{color:var(--chg);}
+.top-sub{font-size:12px;color:var(--text2);margin-bottom:8px;}
+.unit-btn{
+  background:linear-gradient(135deg,var(--card),var(--card2));
+  border:1.5px solid var(--border);border-radius:var(--radius);
+  padding:14px 16px;
+  display:flex;align-items:center;gap:12px;
+  cursor:pointer;text-align:left;width:100%;max-width:380px;-webkit-appearance:none;
+  font-family:inherit;
+}
+.unit-icon{font-size:24px;flex-shrink:0;}
+.unit-info{flex:1;}
+.unit-name{font-size:15px;font-weight:800;color:var(--text);}
+.unit-sub{font-size:11px;color:var(--text2);margin-top:2px;}
+.unit-stat{font-size:11px;color:var(--chg);margin-top:3px;}
+.unit-arrow{font-size:20px;color:var(--text3);}
+
+/* ===== WEAK BTN ===== */
+.weak-btn{
+  background:linear-gradient(135deg,#1a0a0a,#2a1010);
+  border:1.5px solid var(--wrong);border-radius:var(--radius);
+  padding:14px 16px;
+  display:none;align-items:center;gap:12px;
+  cursor:pointer;text-align:left;width:100%;max-width:380px;-webkit-appearance:none;
+  font-family:inherit;
+}
+.weak-btn.visible{display:flex;}
+.weak-btn-icon{font-size:24px;flex-shrink:0;}
+.weak-btn-info{flex:1;}
+.weak-btn-title{font-size:15px;font-weight:800;color:var(--wrong);}
+.weak-btn-sub{font-size:11px;color:var(--text2);margin-top:3px;}
+.weak-btn-count{font-size:11px;color:var(--wrong);margin-top:3px;font-weight:700;}
+.weak-btn-arrow{font-size:20px;color:var(--wrong);}
+
+/* ===== HOME ===== */
+#home{padding:0;}
+.home-header{padding:12px 16px 8px;display:flex;align-items:center;gap:12px;border-bottom:1px solid var(--border);}
+.back-btn{background:none;border:none;color:var(--chg);font-size:24px;cursor:pointer;padding:4px;line-height:1;}
+.home-title{font-size:17px;font-weight:800;}
+.home-body{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:16px;display:flex;flex-direction:column;gap:12px;align-items:center;}
+.level-cards{display:flex;flex-direction:column;gap:10px;width:100%;max-width:380px;}
+.level-card{
+  border-radius:var(--radius);padding:14px 16px;
+  display:flex;align-items:center;gap:12px;
+  cursor:pointer;text-align:left;width:100%;-webkit-appearance:none;font-family:inherit;
+  border:1.5px solid;
+}
+.level-card.lv1{background:linear-gradient(135deg,#0a1929,#0d2137);border-color:var(--s1);}
+.level-card.lv2{background:linear-gradient(135deg,#1c1200,#2a1c00);border-color:var(--s2);}
+.level-card.lv3{background:linear-gradient(135deg,#160a1f,#200f2e);border-color:var(--s3);}
+.level-card.lva{background:linear-gradient(135deg,#111,#1e1e1e);border-color:#666;}
+.lv-badge{font-size:11px;font-weight:800;padding:2px 8px;border-radius:20px;}
+.lv1 .lv-badge{background:#0d2137;color:var(--s1);border:1px solid var(--s1);}
+.lv2 .lv-badge{background:#2a1c00;color:var(--s2);border:1px solid var(--s2);}
+.lv3 .lv-badge{background:#200f2e;color:var(--s3);border:1px solid var(--s3);}
+.lva .lv-badge{background:#222;color:#aaa;border:1px solid #555;}
+.lv-info{flex:1;}
+.lv-name{font-size:14px;font-weight:800;}
+.lv-desc{font-size:11px;color:var(--text2);margin-top:2px;}
+.lv-stat{font-size:11px;margin-top:3px;}
+.lv1 .lv-stat{color:var(--s1);}
+.lv2 .lv-stat{color:var(--s2);}
+.lv3 .lv-stat{color:var(--s3);}
+.lva .lv-stat{color:#aaa;}
+.lv-arrow{font-size:20px;color:var(--text3);}
+
+/* ===== QUIZ ===== */
+#quiz{padding:0;}
+.quiz-header{
+  padding:10px 16px;border-bottom:1px solid var(--border);
+  display:flex;align-items:center;gap:10px;flex-shrink:0;
+}
+.quit-btn{background:none;border:none;color:var(--text3);font-size:22px;cursor:pointer;padding:4px;line-height:1;}
+.progress-wrap{flex:1;display:flex;flex-direction:column;gap:4px;}
+.progress-bar{height:5px;background:var(--border);border-radius:3px;overflow:hidden;}
+.progress-fill{height:100%;background:var(--chg);border-radius:3px;transition:width .3s;}
+.progress-txt{font-size:11px;color:var(--text2);}
+.pts-badge{font-size:12px;font-weight:800;color:var(--chg);white-space:nowrap;}
+.combo-badge{font-size:11px;font-weight:800;color:#ffd54f;white-space:nowrap;}
+
+.quiz-body{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:16px;display:flex;flex-direction:column;gap:14px;}
+.q-meta{display:flex;gap:8px;align-items:center;}
+.q-level-badge{font-size:10px;font-weight:800;padding:2px 8px;border-radius:20px;}
+.q-level-badge.lv1{background:#0d2137;color:var(--s1);border:1px solid var(--s1);}
+.q-level-badge.lv2{background:#2a1c00;color:var(--s2);border:1px solid var(--s2);}
+.q-level-badge.lv3{background:#200f2e;color:var(--s3);border:1px solid var(--s3);}
+.q-unit-label{font-size:10px;color:var(--text2);}
+.q-text{font-size:16px;font-weight:700;line-height:1.6;}
+.choices{display:flex;flex-direction:column;gap:9px;}
+.choice-btn{
+  background:var(--card);border:1.5px solid var(--border);border-radius:12px;
+  padding:13px 15px;text-align:left;color:var(--text);font-size:14px;font-family:inherit;
+  cursor:pointer;transition:all .15s;line-height:1.5;
+}
+.choice-btn:active{opacity:.7;}
+.choice-btn.correct{background:#0a2e0a;border-color:var(--ok);color:var(--ok);}
+.choice-btn.wrong{background:#2e0a0a;border-color:var(--wrong);color:var(--wrong);}
+.choice-btn.show-correct{background:#0a2e0a;border-color:var(--ok);color:var(--ok);}
+.choice-btn:disabled{cursor:default;}
+.exp-box{background:var(--card2);border-radius:10px;padding:12px 14px;font-size:13px;color:var(--text2);line-height:1.6;border-left:3px solid var(--chg);}
+.next-btn{
+  background:var(--chg);color:#000;font-size:15px;font-weight:800;
+  border:none;border-radius:12px;padding:14px;cursor:pointer;font-family:inherit;
+  flex-shrink:0;margin:0 16px 16px;
+}
+
+/* ===== RESULT ===== */
+#result{padding:0;}
+.result-header{padding:12px 16px;border-bottom:1px solid var(--border);font-size:17px;font-weight:800;}
+.result-body{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:16px;display:flex;flex-direction:column;gap:16px;}
+.result-score{text-align:center;padding:20px 0;}
+.score-num{font-size:52px;font-weight:900;color:var(--chg);}
+.score-label{font-size:14px;color:var(--text2);margin-top:4px;}
+.result-stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;}
+.stat-box{background:var(--card);border-radius:10px;padding:12px 8px;text-align:center;}
+.stat-val{font-size:20px;font-weight:800;color:var(--chg);}
+.stat-key{font-size:10px;color:var(--text2);margin-top:2px;}
+.unit-stats{background:var(--card);border-radius:12px;padding:14px;}
+.unit-stat-title{font-size:13px;font-weight:800;margin-bottom:10px;}
+.unit-stat-row{display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid var(--border);}
+.unit-stat-row:last-child{border-bottom:none;}
+.ust-name{font-size:12px;flex:1;}
+.ust-bar-wrap{flex:2;height:6px;background:var(--border);border-radius:3px;overflow:hidden;}
+.ust-bar{height:100%;background:var(--chg);border-radius:3px;}
+.ust-rate{font-size:11px;color:var(--text2);width:36px;text-align:right;}
+.result-btns{display:flex;flex-direction:column;gap:10px;}
+.btn-primary{background:var(--chg);color:#000;font-size:15px;font-weight:800;border:none;border-radius:12px;padding:14px;cursor:pointer;font-family:inherit;}
+.btn-secondary{background:var(--card);color:var(--text);font-size:14px;font-weight:700;border:1.5px solid var(--border);border-radius:12px;padding:12px;cursor:pointer;font-family:inherit;}
+
+/* ===== QUIT MODAL ===== */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:100;align-items:center;justify-content:center;padding:20px;}
+.modal-overlay.show{display:flex;}
+.modal-box{background:#1e1e1e;border-radius:16px;padding:24px;max-width:300px;width:100%;text-align:center;}
+.modal-title{font-size:17px;font-weight:800;margin-bottom:8px;}
+.modal-sub{font-size:13px;color:var(--text2);margin-bottom:20px;}
+.modal-btns{display:flex;gap:10px;}
+.modal-cancel{flex:1;background:var(--card);border:1.5px solid var(--border);color:var(--text);border-radius:10px;padding:12px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;}
+.modal-ok{flex:1;background:var(--wrong);border:none;color:#fff;border-radius:10px;padding:12px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;}
+</style>
+</head>
+<body>
+
+<!-- TOP -->
+<div id="top" class="screen active">
+  <div class="top-title"><span>地学</span>ドリル</div>
+  <div class="top-sub">天気とその変化 / 地球と宇宙</div>
+  <button class="unit-btn" onclick="selectUnit('zenzen')">
+    <span class="unit-icon">🌤️</span>
+    <div class="unit-info">
+      <div class="unit-name">9章：前線の通過と天気の変化</div>
+      <div class="unit-sub">気団・前線・温帯低気圧</div>
+      <div class="unit-stat" id="stat-zenzen"></div>
+    </div>
+    <span class="unit-arrow">›</span>
+  </button>
+  <button class="unit-btn" onclick="selectUnit('taiki')">
+    <span class="unit-icon">🌏</span>
+    <div class="unit-info">
+      <div class="unit-name">10章：大気の動きと日本の天気</div>
+      <div class="unit-sub">偏西風・季節風・四季の天気・台風</div>
+      <div class="unit-stat" id="stat-taiki"></div>
+    </div>
+    <span class="unit-arrow">›</span>
+  </button>
+  <button class="unit-btn" onclick="selectUnit('tentai')">
+    <span class="unit-icon">🌟</span>
+    <div class="unit-info">
+      <div class="unit-name">11章：天体の1日の動きと地球の自転</div>
+      <div class="unit-sub">天球・日周運動・地球の自転・時差</div>
+      <div class="unit-stat" id="stat-tentai"></div>
+    </div>
+    <span class="unit-arrow">›</span>
+  </button>
+  <button class="unit-btn" onclick="selectUnit('ALL')">
+    <span class="unit-icon">🔀</span>
+    <div class="unit-info">
+      <div class="unit-name">全単元シャッフル</div>
+      <div class="unit-sub">3章全問ランダム出題</div>
+      <div class="unit-stat" id="stat-all"></div>
+    </div>
+    <span class="unit-arrow">›</span>
+  </button>
+  <button class="weak-btn" id="top-weak-btn" onclick="startWeak()">
+    <span class="weak-btn-icon">🔥</span>
+    <div class="weak-btn-info">
+      <div class="weak-btn-title">苦手克服モード</div>
+      <div class="weak-btn-sub">間違えた問題を集中特訓</div>
+      <div class="weak-btn-count" id="top-weak-count"></div>
+    </div>
+    <span class="weak-btn-arrow">›</span>
+  </button>
+</div>
+
+<!-- HOME -->
+<div id="home" class="screen">
+  <div class="home-header">
+    <button class="back-btn" onclick="showScreen('top')">‹</button>
+    <div class="home-title" id="home-title"></div>
+  </div>
+  <div class="home-body">
+    <div class="level-cards">
+      <button class="level-card lv1" onclick="startQuiz('BASIC')">
+        <span class="lv-badge">BASIC</span>
+        <div class="lv-info">
+          <div class="lv-name">基本問題</div>
+          <div class="lv-desc">用語・定義を確認</div>
+          <div class="lv-stat" id="stat-lv1"></div>
+        </div>
+        <span class="lv-arrow">›</span>
+      </button>
+      <button class="level-card lv2" onclick="startQuiz('STANDARD')">
+        <span class="lv-badge">STANDARD</span>
+        <div class="lv-info">
+          <div class="lv-name">練習問題</div>
+          <div class="lv-desc">理解を深める応用</div>
+          <div class="lv-stat" id="stat-lv2"></div>
+        </div>
+        <span class="lv-arrow">›</span>
+      </button>
+      <button class="level-card lv3" onclick="startQuiz('ADVANCED')">
+        <span class="lv-badge">ADVANCED</span>
+        <div class="lv-info">
+          <div class="lv-name">発展・入試レベル</div>
+          <div class="lv-desc">STEP演習・まとめテスト</div>
+          <div class="lv-stat" id="stat-lv3"></div>
+        </div>
+        <span class="lv-arrow">›</span>
+      </button>
+      <button class="level-card lva" onclick="startQuiz('ALL')">
+        <span class="lv-badge">ALL</span>
+        <div class="lv-info">
+          <div class="lv-name">全レベルシャッフル</div>
+          <div class="lv-desc">全問ランダム</div>
+          <div class="lv-stat" id="stat-lva"></div>
+        </div>
+        <span class="lv-arrow">›</span>
+      </button>
+    </div>
+    <button class="weak-btn" id="weak-btn" onclick="startWeak()">
+      <span class="weak-btn-icon">🔥</span>
+      <div class="weak-btn-info">
+        <div class="weak-btn-title">苦手克服モード</div>
+        <div class="weak-btn-sub">間違えた問題を集中特訓</div>
+        <div class="weak-btn-count" id="weak-count"></div>
+      </div>
+      <span class="weak-btn-arrow">›</span>
+    </button>
+  </div>
+</div>
+
+<!-- QUIZ -->
+<div id="quiz" class="screen">
+  <div class="quiz-header">
+    <button class="quit-btn" onclick="confirmQuit()">✕</button>
+    <div class="progress-wrap">
+      <div class="progress-bar"><div class="progress-fill" id="prog"></div></div>
+      <div class="progress-txt" id="prog-txt"></div>
+    </div>
+    <div class="pts-badge" id="pts-badge">0pt</div>
+    <div class="combo-badge" id="combo-badge" style="display:none"></div>
+  </div>
+  <div class="quiz-body" id="quiz-body">
+    <div class="q-meta"><span class="q-level-badge" id="q-lv-badge"></span><span class="q-unit-label" id="q-unit-label"></span></div>
+    <div class="q-text" id="q-text"></div>
+    <div class="choices" id="choices"></div>
+    <div class="exp-box" id="exp-box" style="display:none"></div>
+  </div>
+  <button class="next-btn" id="next-btn" style="display:none" onclick="nextQ()">次の問題 →</button>
+</div>
+
+<!-- RESULT -->
+<div id="result" class="screen">
+  <div class="result-header">📊 結果</div>
+  <div class="result-body">
+    <div class="result-score">
+      <div class="score-num" id="res-pts">0</div>
+      <div class="score-label">ポイント獲得</div>
+    </div>
+    <div class="result-stats">
+      <div class="stat-box"><div class="stat-val" id="res-correct">0</div><div class="stat-key">正解</div></div>
+      <div class="stat-box"><div class="stat-val" id="res-total">0</div><div class="stat-key">出題数</div></div>
+      <div class="stat-box"><div class="stat-val" id="res-rate">0%</div><div class="stat-key">正解率</div></div>
+    </div>
+    <div class="unit-stats">
+      <div class="unit-stat-title">📈 単元別成績</div>
+      <div id="unit-stat-rows"></div>
+    </div>
+    <div class="result-btns">
+      <button class="btn-primary" onclick="retryQuiz()">🔄 もう一度</button>
+      <button class="btn-secondary" id="result-weak-btn" onclick="startWeak()" style="display:none">🔥 間違えた問題を特訓</button>
+      <button class="btn-secondary" onclick="showScreen('home')">📚 レベル選択に戻る</button>
+      <button class="btn-secondary" onclick="showScreen('top')">🏠 トップに戻る</button>
+    </div>
+  </div>
+</div>
+
+<!-- QUIT MODAL -->
+<div class="modal-overlay" id="quit-modal">
+  <div class="modal-box">
+    <div class="modal-title">やめる？</div>
+    <div class="modal-sub">進行中の記録は保存されません</div>
+    <div class="modal-btns">
+      <button class="modal-cancel" onclick="closeQuit()">続ける</button>
+      <button class="modal-ok" onclick="doQuit()">やめる</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ===== DATA =====
+const QUESTIONS = [
+// === 9章 前線の通過と天気の変化 BASIC ===
+{id:'zz01',unit:'zenzen',lv:'BASIC',q:'広い範囲にわたって気温や湿度がほぼ一様な空気のかたまりを何というか。',choices:['前線','気団','気圧','前線面'],ans:1,exp:'気団とは、大陸上や海洋上に長くとどまった空気が、広い範囲にわたって気温・湿度がほぼ一様になったかたまりのこと。'},
+{id:'zz02',unit:'zenzen',lv:'BASIC',q:'性質の異なる2つの気団がぶつかったとき、すぐに混じり合わずにできる境界面を何というか。',choices:['前線','気団','前線面','等圧線'],ans:2,exp:'前線面とは、性質の違う2つの気団の境界面のこと。前線面が地表と交わるところが前線。'},
+{id:'zz03',unit:'zenzen',lv:'BASIC',q:'前線面が地表と交わるところを何というか。',choices:['前線面','前線','気団','等圧線'],ans:1,exp:'前線は前線面と地表との交線。'},
+{id:'zz04',unit:'zenzen',lv:'BASIC',q:'寒気が暖気に向かって進むときにできる前線を何というか。',choices:['温暖前線','停滞前線','寒冷前線','閉塞前線'],ans:2,exp:'寒冷前線は寒気が暖気を押しながら進む前線。積乱雲が垂直に発達し、強い雨が短時間降る。'},
+{id:'zz05',unit:'zenzen',lv:'BASIC',q:'暖気が寒気に向かって進むときにできる前線を何というか。',choices:['寒冷前線','温暖前線','閉塞前線','停滞前線'],ans:1,exp:'温暖前線は暖気が寒気の上にはい上がりながら進む前線。乱層雲が広がり、おだやかな雨が広範囲に長時間降る。'},
+{id:'zz06',unit:'zenzen',lv:'BASIC',q:'暖気と寒気がほぼ同じ勢力でぶつかって、ほとんど動かない前線を何というか。',choices:['寒冷前線','温暖前線','閉塞前線','停滞前線'],ans:3,exp:'停滞前線はほとんど動かない前線。梅雨前線・秋雨前線はこの一種。'},
+{id:'zz07',unit:'zenzen',lv:'BASIC',q:'寒冷前線付近で発達する雲の種類は何か。',choices:['乱層雲','積乱雲','巻雲','高積雲'],ans:1,exp:'寒冷前線では寒気が暖気を急激に押し上げるため、積乱雲などの積状の雲が垂直に発達する。'},
+{id:'zz08',unit:'zenzen',lv:'BASIC',q:'温暖前線付近で発達する雲の種類は何か。',choices:['積乱雲','積雲','乱層雲','巻積雲'],ans:2,exp:'温暖前線では暖気がゆるやかに寒気の上にはい上がるため、乱層雲や高層雲が広い範囲にわたってできる。'},
+{id:'zz09',unit:'zenzen',lv:'BASIC',q:'寒冷前線が通過したとき、風向はどのように変化するか。',choices:['南寄りに変わる','北寄りに変わる','東寄りに変わる','変化しない'],ans:1,exp:'寒冷前線通過後は北寄りの風に変わる。また気温が急に下がり、雨は短時間でやむ。'},
+{id:'zz10',unit:'zenzen',lv:'BASIC',q:'温暖前線が通過したとき、気温はどのように変化するか。',choices:['急に下がる','上がる','変化しない','一時的に下がった後上がる'],ans:1,exp:'温暖前線通過後は暖気におおわれるため気温が上がる。風向は南寄りになる。'},
+{id:'zz11',unit:'zenzen',lv:'BASIC',q:'日本付近のつゆ（梅雨）の時期にできる停滞前線を何というか。',choices:['秋雨前線','梅雨前線','寒冷前線','閉塞前線'],ans:1,exp:'梅雨前線はオホーツク海気団と小笠原気団の勢力が拮抗してできる停滞前線。'},
+{id:'zz12',unit:'zenzen',lv:'BASIC',q:'温帯低気圧は中緯度帯でできる。その中心から南東側にできる前線は何か。',choices:['寒冷前線','温暖前線','閉塞前線','停滞前線'],ans:1,exp:'温帯低気圧の南東側に温暖前線、南西側に寒冷前線ができる。'},
+{id:'zz13',unit:'zenzen',lv:'BASIC',q:'温帯低気圧が西から東へ移動するのは何の影響か。',choices:['季節風','海陸風','偏西風','貿易風'],ans:2,exp:'偏西風（中緯度帯の上空を吹く西寄りの強風）の影響で、日本付近の低気圧は西から東へ移動する。'},
+
+// === 9章 STANDARD ===
+{id:'zz14',unit:'zenzen',lv:'STANDARD',q:'寒冷前線の通過に伴う雨の特徴として正しいものはどれか。',choices:['広い範囲に長時間降る','狭い範囲に強く短時間降る','ほとんど降らない','霧雨のように降る'],ans:1,exp:'寒冷前線では積乱雲が発達し、強い雨が狭い範囲で短時間降る。通過後は天気が急速に回復する。'},
+{id:'zz15',unit:'zenzen',lv:'STANDARD',q:'閉塞前線はどのようにしてできるか。',choices:['温暖前線が停滞してできる','寒冷前線が温暖前線に追いついてできる','2つの気団が均等に衝突してできる','前線面が消滅する直前にできる'],ans:1,exp:'寒冷前線は温暖前線より速く進むため、やがて温暖前線に追いついて閉塞前線ができる。その後低気圧は消滅する。'},
+{id:'zz16',unit:'zenzen',lv:'STANDARD',q:'温暖前線が近づくにつれ、雲の順番（遠い順）として正しいものはどれか。',choices:['乱層雲→高層雲→巻雲','高層雲→乱層雲→巻雲','巻雲→高層雲→乱層雲','積乱雲→積雲→巻積雲'],ans:2,exp:'温暖前線が近づくにつれ、遠くから順に巻雲（C）→高積雲→高層雲(A)→乱層雲(B)の順に見える。'},
+{id:'zz17',unit:'zenzen',lv:'STANDARD',q:'前線付近では気圧はどのように変化するか。',choices:['前線通過前に高くなり、通過後に低くなる','前線通過時に低くなり、通過後に高くなる','変化しない','前線の種類によって異なる'],ans:1,exp:'前線は低気圧に伴うことが多いため、前線通過時に気圧が低下し、通過後に上昇する。'},
+{id:'zz18',unit:'zenzen',lv:'STANDARD',q:'図の前線Xは寒気が暖気の下にもぐり込んでいる。これは何前線か。',choices:['温暖前線','停滞前線','閉塞前線','寒冷前線'],ans:3,exp:'寒冷前線では寒気が暖気の下にもぐりこんで暖気を急激に押し上げる構造になっている。'},
+{id:'zz19',unit:'zenzen',lv:'STANDARD',q:'温帯低気圧で、暖気におおわれている地点はどこか。温暖前線の東側か、寒冷前線と温暖前線の間か。',choices:['温暖前線の東側','寒冷前線と温暖前線の間','寒冷前線の西側','低気圧の中心'],ans:1,exp:'温暖前線と寒冷前線の間（暖域）が暖気におおわれる。温暖前線の東側は寒気に、寒冷前線の西側も寒気におおわれる。'},
+{id:'zz20',unit:'zenzen',lv:'STANDARD',q:'寒冷前線通過後の気象変化として正しくないものはどれか。',choices:['気温が急に下がる','北寄りの風になる','雨はすぐにやむ','気圧が下がり続ける'],ans:3,exp:'寒冷前線通過後は、気圧が上がり天気が回復する。気温低下・北寄りの風・雨が短時間でやむのは正しい変化。'},
+
+// === 9章 ADVANCED ===
+{id:'zz21',unit:'zenzen',lv:'ADVANCED',q:'寒冷前線が通過した時刻として最も適切なものはどれか。気温が急に下がり、風向が南寄りから北寄りに変わった時刻を選べ。',choices:['気温・風向が変化する直前','気温が急に下がり風が北寄りに変わった時刻','気圧が最も低い時刻','雨が降り始めた時刻'],ans:1,exp:'寒冷前線通過のサインは①気温の急低下②風向が南寄り→北寄り③気圧の上昇（低下→上昇に転じる）の組み合わせ。'},
+{id:'zz22',unit:'zenzen',lv:'ADVANCED',q:'温暖前線(A)の前後で、横浜の風向が「南西→北西」に変化した。これは何を意味するか。',choices:['温暖前線が通過した','寒冷前線が通過した','閉塞前線が通過した','停滞前線が通過した'],ans:1,exp:'寒冷前線の通過で風向が南寄り→北寄りに変わる。設問の場合、横浜で風が北西寄りになったのは寒冷前線の通過を示す。'},
+{id:'zz23',unit:'zenzen',lv:'ADVANCED',q:'低気圧の中心に近いほど等圧線の間隔はどうなるか。',choices:['広くなる','狭くなる','変わらない','交互に変化する'],ans:1,exp:'等圧線の間隔が狭いほど気圧の差が大きく、風が強い。低気圧の中心に向かうほど気圧勾配が大きくなるため間隔が狭くなる。'},
+
+// === 10章 大気の動きと日本の天気 BASIC ===
+{id:'tk01',unit:'taiki',lv:'BASIC',q:'中緯度帯の上空で1年中吹く西寄りの強い風を何というか。',choices:['季節風','海陸風','偏西風','貿易風'],ans:2,exp:'偏西風は中緯度帯の上空を吹く西寄りの強い風で、日本付近の低気圧・高気圧が西から東へ移動する原因。'},
+{id:'tk02',unit:'taiki',lv:'BASIC',q:'日本付近の低気圧や高気圧は、偏西風の影響でどの方向からどの方向へ移動するか。',choices:['東から西','西から東','南から北','北から南'],ans:1,exp:'偏西風の影響で日本付近の天気は西から東へ変わる。'},
+{id:'tk03',unit:'taiki',lv:'BASIC',q:'海岸付近で、陸上と海上に気圧差が生じてふく風を何というか。',choices:['偏西風','季節風','海陸風','貿易風'],ans:2,exp:'海陸風は海岸付近で、陸と海のあたたまりやすさの違いから生じる風。昼は海から陸へ（海風）、夜は陸から海へ（陸風）ふく。'},
+{id:'tk04',unit:'taiki',lv:'BASIC',q:'晴れた日の昼、海岸付近で海から陸に向かってふく風を何というか。',choices:['陸風','季節風','偏西風','海風'],ans:3,exp:'昼間は陸上のほうが温度が高く上昇気流→低気圧、海上は下降気流→高気圧となり、海から陸へ海風がふく。'},
+{id:'tk05',unit:'taiki',lv:'BASIC',q:'シベリア高気圧が発達してできる、冷たく乾燥した気団を何というか。',choices:['小笠原気団','オホーツク海気団','シベリア気団','揚子江気団'],ans:2,exp:'シベリア気団は冷たく乾燥した気団で、冬に発達してシベリア気団から北西の季節風がふく。'},
+{id:'tk06',unit:'taiki',lv:'BASIC',q:'太平洋高気圧が発達してできる、あたたかく湿った気団を何というか。',choices:['シベリア気団','オホーツク海気団','シベリア気団','小笠原気団'],ans:3,exp:'小笠原気団は太平洋高気圧が発達してできる、あたたかく湿った気団。夏に日本付近で勢力を持つ。'},
+{id:'tk07',unit:'taiki',lv:'BASIC',q:'冬の日本付近での気圧配置を漢字4字で答えよ。',choices:['南高北低','西高東低','東高西低','北高南低'],ans:1,exp:'冬は西の大陸に高気圧（シベリア気団）、東の太平洋に低気圧があり、西高東低の冬型気圧配置になる。'},
+{id:'tk08',unit:'taiki',lv:'BASIC',q:'夏の日本付近での気圧配置を漢字4字で答えよ。',choices:['西高東低','東高西低','北高南低','南高北低'],ans:3,exp:'夏は日本の南に高気圧（小笠原気団）、北に低気圧があり、南高北低の気圧配置になる。'},
+{id:'tk09',unit:'taiki',lv:'BASIC',q:'冬にふく季節風の風向を8方位で答えよ。',choices:['南東','北西','南西','北東'],ans:1,exp:'冬はシベリア気団から北西の季節風がふく。日本海側に大雪をもたらす。'},
+{id:'tk10',unit:'taiki',lv:'BASIC',q:'夏にふく季節風の風向を8方位で答えよ。',choices:['北西','北東','南東','南西'],ans:2,exp:'夏は小笠原気団から南東の季節風がふき、蒸し暑い晴れが続く。'},
+{id:'tk11',unit:'taiki',lv:'BASIC',q:'春や秋に日本列島を次々に通過する高気圧を特に何というか。',choices:['シベリア高気圧','太平洋高気圧','移動性高気圧','オホーツク海高気圧'],ans:2,exp:'移動性高気圧は偏西風に乗って西から東へ移動し、4〜7日の周期で天気が変わる春・秋の特徴。'},
+{id:'tk12',unit:'taiki',lv:'BASIC',q:'海上で発生した熱帯低気圧のうち、最大風速が17.2m/s以上になったものを何というか。',choices:['温帯低気圧','前線低気圧','台風','移動性低気圧'],ans:2,exp:'台風は最大風速17.2m/s以上の熱帯低気圧。等圧線はほぼ同心円状で前線を伴わない。'},
+{id:'tk13',unit:'taiki',lv:'BASIC',q:'台風や温帯低気圧の中心は気圧が低いため、海面がもち上がることがある。これを何というか。',choices:['高波','高潮','津波','洪水'],ans:1,exp:'高潮は気圧の低下により海面がもち上がる現象。台風や低気圧が近づいたときに発生する。'},
+
+// === 10章 STANDARD ===
+{id:'tk14',unit:'taiki',lv:'STANDARD',q:'冬に日本海側に大雪が降るしくみとして正しいものはどれか。',choices:['太平洋側から暖かく湿った風が吹くから','冷たく乾燥した季節風が日本海を通過するときに水蒸気を含み、山脈にぶつかって雪を降らせるから','偏西風が強くなるから','シベリア気団が日本列島を直接おおうから'],ans:1,exp:'シベリア気団からの冷たく乾燥した北西の風が日本海で大量の水蒸気を含み、山脈にぶつかって上昇し、積乱雲ができて日本海側に大雪を降らせる。'},
+{id:'tk15',unit:'taiki',lv:'STANDARD',q:'梅雨（つゆ）の時期に停滞前線ができる理由を簡単に答えよ。',choices:['シベリア気団と小笠原気団が衝突するから','オホーツク海気団と小笠原気団の勢力がつり合うから','移動性高気圧が停止するから','偏西風が弱まるから'],ans:1,exp:'初夏のころ、オホーツク海気団（冷たく湿）と小笠原気団（あたたかく湿）の勢力がつり合い、停滞前線（梅雨前線）ができる。'},
+{id:'tk16',unit:'taiki',lv:'STANDARD',q:'台風が日本付近で進路を東に変える理由は何か。',choices:['海水温が低くなるから','偏西風の影響を受けるから','台風が衰弱するから','前線に押されるから'],ans:1,exp:'低緯度では太平洋高気圧のふちに沿って北上し、中緯度に達すると偏西風の影響を受けて進路を東に変える。'},
+{id:'tk17',unit:'taiki',lv:'STANDARD',q:'オホーツク海気団の性質として正しいものはどれか。',choices:['あたたかく乾燥','あたたかく湿潤','冷たく乾燥','冷たく湿潤'],ans:3,exp:'オホーツク海気団はオホーツク海高気圧が発達してできる、冷たく湿った気団。初夏〜初秋に発達する。'},
+{id:'tk18',unit:'taiki',lv:'STANDARD',q:'冬の季節風が日本海側に大雪、太平洋側に乾燥した晴れをもたらす理由を簡潔に述べよ。',choices:['山脈を越えた風は水分を失って乾燥するから','太平洋側は気温が高いから','偏西風が太平洋側に吹くから','太平洋側は低気圧になるから'],ans:0,exp:'冷たく乾燥した季節風が日本海で水蒸気を含み日本海側に雪を降らせた後、山脈を越えると水分を失って太平洋側にはフェーン現象的な乾燥した晴天をもたらす。'},
+
+// === 10章 ADVANCED ===
+{id:'tk19',unit:'taiki',lv:'ADVANCED',q:'ある天気図で、等圧線が西高東低の気圧配置を示し、等圧線が日本列島に対して縦縞状になっている。これはどの季節か。',choices:['春','夏','秋','冬'],ans:3,exp:'西高東低の縦縞状の等圧線は冬型の気圧配置の特徴。シベリア気団が発達し、北西の季節風が強まる。'},
+{id:'tk20',unit:'taiki',lv:'ADVANCED',q:'台風の中心が和歌山市の北西にあるとき、和歌山市での風向はどうなるか。',choices:['北西','北東','南南西','南東'],ans:2,exp:'台風は北半球では反時計回りに風がふき込む。台風の中心が北西にある場合、和歌山市では南南西〜南東の風になる。'},
+{id:'tk21',unit:'taiki',lv:'ADVANCED',q:'梅雨が終わる理由を気団名を使って説明せよ。',choices:['シベリア気団が弱まるから','小笠原気団の勢力がオホーツク海気団より強くなり、梅雨前線を北へ押し上げるから','前線が消滅するから','偏西風が弱まるから'],ans:1,exp:'小笠原気団の勢力が強まると梅雨前線を北へ押し上げ、日本付近では梅雨が明けて本格的な夏になる。'},
+
+// === 11章 天体の1日の動きと地球の自転 BASIC ===
+{id:'tt01',unit:'tentai',lv:'BASIC',q:'太陽や星などの天体の位置を表す、観測者を中心とした見かけ上の球形の天井を何というか。',choices:['地平線','天頂','天球','子午線'],ans:2,exp:'天球とは観測者を中心とした大きな球形の見かけ上の天井。天体の位置は方位角と高度で表す。'},
+{id:'tt02',unit:'tentai',lv:'BASIC',q:'天体の位置を表す2つの要素は何か。',choices:['方位と距離','方位角と高度','経度と緯度','高度と距離'],ans:1,exp:'天球上の天体の位置は方位角（北を0°として時計回りに測った角度）と高度（地平面からの角度）で表す。'},
+{id:'tt03',unit:'tentai',lv:'BASIC',q:'太陽が真南にくることを何というか。',choices:['日の出','日の入り','南中','天頂通過'],ans:2,exp:'南中とは太陽などの天体が真南にくること。このとき高度が1日のうちで最も高くなる（南中高度）。'},
+{id:'tt04',unit:'tentai',lv:'BASIC',q:'太陽が1日のうちもっとも高くなったときの高度を何というか。',choices:['方位角','高度','南中高度','天頂高度'],ans:2,exp:'南中高度は天体が南中したときの高度。太陽の場合、夏至に最大、冬至に最小となる。'},
+{id:'tt05',unit:'tentai',lv:'BASIC',q:'太陽の1日の動きについて、太陽はどこから昇ってどこへ沈むか。',choices:['西から昇り東へ沈む','南から昇り北へ沈む','東から昇り西へ沈む','北から昇り南へ沈む'],ans:2,exp:'太陽は東の地平線から昇り、南の空を通って、西の地平線に沈む。これを太陽の日周運動という。'},
+{id:'tt06',unit:'tentai',lv:'BASIC',q:'天球は1時間に何度回転するか。',choices:['24°','30°','15°','12°'],ans:2,exp:'天球は1日（24時間）で360°回転するので、1時間では360°÷24=15°回転する。'},
+{id:'tt07',unit:'tentai',lv:'BASIC',q:'北の空の星は何を中心に回転するように見えるか。',choices:['天頂','北極星','南中点','子午線'],ans:1,exp:'北の空の星は北極星をほぼ中心に反時計回りに回転しているように見える。北極星は地軸の延長線上にあるためほとんど動かない。'},
+{id:'tt08',unit:'tentai',lv:'BASIC',q:'太陽や星などの天体が天球上を東から西へ1日に1回転する動きを何というか。',choices:['年周運動','公転','日周運動','自転'],ans:2,exp:'日周運動は地球の自転による見かけの動き。天体は天球上を東から西へ約1日（24時間）で1回転する。'},
+{id:'tt09',unit:'tentai',lv:'BASIC',q:'地球が北極と南極を結ぶ軸（地軸）を中心に西から東へ約1日に1回転する運動を何というか。',choices:['公転','日周運動','年周運動','自転'],ans:3,exp:'自転とは地球が地軸を中心に西から東へ（北極側から見て反時計回り）約1日に1回転する運動。'},
+{id:'tt10',unit:'tentai',lv:'BASIC',q:'北極星の高度は観測地点の何にほぼ等しいか。',choices:['経度','標高','緯度','気温'],ans:2,exp:'北極星は地軸の延長線上にあるため、北極星の高度は観測地点の緯度にほぼ等しい。'},
+{id:'tt11',unit:'tentai',lv:'BASIC',q:'地球の自転により、東の地点ほど太陽の南中時刻は早くなるか遅くなるか。',choices:['遅くなる','同じ','早くなる','毎日変わる'],ans:2,exp:'地球は西から東へ自転するため、東の地点ほど太陽が南中する時刻が早くなる。東経が15°大きいと1時間早い。'},
+{id:'tt12',unit:'tentai',lv:'BASIC',q:'世界各地で、その地点での太陽の南中時刻を正午とした時刻を何というか。',choices:['世界時','協定時','標準時','太陽時'],ans:2,exp:'標準時は、特定の経線上での太陽の南中時刻を正午とした時刻。日本の標準時は東経135°の標準時を使用。'},
+{id:'tt13',unit:'tentai',lv:'BASIC',q:'世界の異なる地域間の標準時の差を何というか。',choices:['経度差','標準時差','時差','時刻差'],ans:2,exp:'時差は標準時の差。東経が15°異なると1時間の時差が生じる。日本（東経135°）とイギリス（経度0°）の時差は9時間。'},
+
+// === 11章 STANDARD ===
+{id:'tt14',unit:'tentai',lv:'STANDARD',q:'透明半球を使って太陽の1日の動きを調べる実験で、サインペンの先端の影が必ず合わせる点はどこか。',choices:['円の中心O','透明半球のふち','真南の点','天頂の点P'],ans:0,exp:'透明半球でサインペンの先端の影を円の中心Oに合わせて太陽の位置を記録する。Oは観測者の位置に相当する。'},
+{id:'tt15',unit:'tentai',lv:'STANDARD',q:'北の空の星をカメラで長時間露光すると同心円状の軌跡が見える。これは地球のどのような運動によるものか。',choices:['地球の公転','地球の自転','地球の歳差運動','月の公転'],ans:1,exp:'天体の日周運動（北の空では北極星を中心とした反時計回りの円運動）は地球の自転による見かけの動き。'},
+{id:'tt16',unit:'tentai',lv:'STANDARD',q:'地球が1時間で自転する角度は何度か。',choices:['24°','1°','30°','15°'],ans:3,exp:'地球は1日（24時間）で360°自転するので、1時間では360°÷24=15°自転する。経度15°=1時間の時差。'},
+{id:'tt17',unit:'tentai',lv:'STANDARD',q:'東経135°の兵庫県明石市で12時に太陽が南中した。東経120°の地点で太陽が南中するのは何時か。',choices:['11時','13時','12時','14時'],ans:1,exp:'東経が15°小さいと1時間遅くなる。東経135°－東経120°＝15°の差なので、明石市の1時間後の13時に南中する。'},
+{id:'tt18',unit:'tentai',lv:'STANDARD',q:'オリオン座が東の地平線に昇ってから真南に来るまで何時間かかるか（星は1時間で15°動く）。東の地平線から真南まで90°とする。',choices:['4時間','6時間','8時間','3時間'],ans:1,exp:'90°÷15°=6時間。星は1時間に15°動くので、90°動くのに6時間かかる。'},
+{id:'tt19',unit:'tentai',lv:'STANDARD',q:'ある地点で北極星の高度を測ったら35°だった。この地点の緯度はおよそ何度か。',choices:['45°N','55°N','25°N','35°N'],ans:3,exp:'北極星の高度＝観測地点の緯度（北緯）。北極星の高度が35°なら北緯35°付近。'},
+
+// === 11章 ADVANCED ===
+{id:'tt20',unit:'tentai',lv:'ADVANCED',q:'東経120°の地点Aで太陽が南中するのは、東経135°の地点Bより何時間前か後か。',choices:['1時間前','1時間後','2時間前','2時間後'],ans:1,exp:'東経が大きいほど南中時刻が早い。B（135°）はA（120°）より東経が15°大きいので、Bでの南中がAより1時間早い。よってAでの南中はBより1時間後。'},
+{id:'tt21',unit:'tentai',lv:'ADVANCED',q:'東経135°（日本）を午後8時に出発した飛行機が12時間後に経度0°（ロンドン）に到着した。日本出発時のロンドンの時刻は何時か。',choices:['午前8時','午後8時','午前11時','午前9時'],ans:2,exp:'日本とロンドンの時差は135°÷15°=9時間。日本が午後8時（20時）のとき、ロンドンは20−9=11時→午前11時。'},
+{id:'tt22',unit:'tentai',lv:'ADVANCED',q:'南の空の星の日周運動で、星が1時間に動く角度は何度か、また方向はどちらか。',choices:['15°、東から西へ','15°、西から東へ','30°、東から西へ','10°、東から西へ'],ans:0,exp:'南の空の星は東から西へ1時間に15°動く（天球が東から西へ1時間15°回転するため）。'},
+{id:'tt23',unit:'tentai',lv:'ADVANCED',q:'北の空の星は北極星を中心に1時間に何度、どの方向に回転して見えるか。',choices:['15°、時計回り','15°、反時計回り','30°、時計回り','30°、反時計回り'],ans:1,exp:'北の空の星は北極星を中心に反時計回りに1時間15°回転しているように見える。地球が西から東（北極側から見て反時計回り）に自転しているため。'},
+];
+
+// ===== STATE =====
+let currentUnit='', currentLevel='', lastUnit='', lastLevel='';
+let quizQueue=[], quizIdx=0, sessionPts=0, sessionCorrect=0, combo=0;
+let firstMiss=false, answered=false;
+let isWeakMode=false;
+
+// ===== STORAGE =====
+function loadStats(){try{return JSON.parse(localStorage.getItem('chigaku_stats')||'{}')}catch(e){return{}}}
+function saveStats(s){try{localStorage.setItem('chigaku_stats',JSON.stringify(s))}catch(e){}}
+function loadWeak(){try{return JSON.parse(localStorage.getItem('chigaku_weak')||'[]')}catch(e){return[]}}
+function saveWeak(a){try{localStorage.setItem('chigaku_weak',JSON.stringify(a))}catch(e){}}
+function addWeak(id){const w=loadWeak();if(!w.includes(id)){w.push(id);saveWeak(w);}}
+function removeWeak(id){saveWeak(loadWeak().filter(x=>x!==id));}
+
+// ===== HELPERS =====
+function shuffle(a){const b=[...a];for(let i=b.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[b[i],b[j]]=[b[j],b[i]];}return b;}
+function getQsByUnit(unit,lv){
+  let qs=unit==='ALL'?QUESTIONS:QUESTIONS.filter(q=>q.unit===unit);
+  if(lv!=='ALL')qs=qs.filter(q=>q.lv===lv);
+  return qs;
+}
+function getAllQs(){return QUESTIONS;}
+function unitLabel(u){return{zenzen:'9章 前線',taiki:'10章 大気',tentai:'11章 天体'}[u]||u;}
+function lvClass(lv){return{BASIC:'lv1',STANDARD:'lv2',ADVANCED:'lv3'}[lv]||'lv3';}
+
+// ===== SCREENS =====
+function showScreen(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  if(id==='top')refreshTopStats();
+}
+
+function refreshTopStats(){
+  const s=loadStats();
+  ['zenzen','taiki','tentai'].forEach(u=>{
+    const el=document.getElementById('stat-'+u);
+    const qs=QUESTIONS.filter(q=>q.unit===u);
+    const st=s[u]||{correct:0,total:0};
+    el.textContent=st.total>0?`正解率 ${Math.round(st.correct/st.total*100)}%（${st.correct}/${st.total}問）`:'まだ挑戦していない';
+  });
+  const st=s['ALL']||{correct:0,total:0};
+  const el=document.getElementById('stat-all');
+  el.textContent=st.total>0?`正解率 ${Math.round(st.correct/st.total*100)}%（${st.correct}/${st.total}問）`:'';
+  // top weak btn
+  const weak=loadWeak();
+  const btn=document.getElementById('top-weak-btn');
+  const cnt=document.getElementById('top-weak-count');
+  if(weak.length>0){btn.classList.add('visible');cnt.textContent=`全体 ${weak.length}問 蓄積中`;}
+  else btn.classList.remove('visible');
+}
+
+function selectUnit(unit){
+  currentUnit=unit;
+  document.getElementById('home-title').textContent=
+    unit==='ALL'?'全単元シャッフル':{zenzen:'9章 前線の通過と天気の変化',taiki:'10章 大気の動きと日本の天気',tentai:'11章 天体の1日の動きと地球の自転'}[unit];
+  const s=loadStats();
+  ['BASIC','STANDARD','ADVANCED','ALL'].forEach((lv,i)=>{
+    const id=['stat-lv1','stat-lv2','stat-lv3','stat-lva'][i];
+    const el=document.getElementById(id);
+    const key=unit+'_'+lv;
+    const st=s[key]||{correct:0,total:0};
+    el.textContent=st.total>0?`${Math.round(st.correct/st.total*100)}% (${st.correct}/${st.total})`:getQsByUnit(unit,lv).length+'問';
+  });
+  updateWeakBtn(unit);
+  showScreen('home');
+}
+
+function updateWeakBtn(unit){
+  const weak=loadWeak();
+  const unitQs=unit==='ALL'?QUESTIONS:QUESTIONS.filter(q=>q.unit===unit);
+  const cnt=unitQs.filter(q=>weak.includes(q.id)).length;
+  const btn=document.getElementById('weak-btn');
+  const el=document.getElementById('weak-count');
+  if(cnt>0){btn.classList.add('visible');el.textContent=`${cnt}問 蓄積中`;}
+  else btn.classList.remove('visible');
+}
+
+function startQuiz(lv){
+  isWeakMode=false;
+  currentLevel=lv; lastUnit=currentUnit; lastLevel=lv;
+  quizQueue=shuffle(getQsByUnit(currentUnit,lv));
+  quizIdx=0;sessionPts=0;sessionCorrect=0;combo=0;
+  showScreen('quiz');renderQuestion();
+}
+
+function startWeak(){
+  const weak=loadWeak();
+  if(weak.length===0){alert('苦手問題がまだありません！まずドリルに挑戦してみよう');return;}
+  const weakQs=QUESTIONS.filter(q=>weak.includes(q.id));
+  if(weakQs.length===0){alert('苦手問題がありません');return;}
+  isWeakMode=true;
+  quizQueue=shuffle(weakQs);
+  quizIdx=0;sessionPts=0;sessionCorrect=0;combo=0;
+  showScreen('quiz');renderQuestion();
+}
+
+// ===== QUIZ =====
+function renderQuestion(){
+  const q=quizQueue[quizIdx];
+  firstMiss=false;answered=false;
+  const pct=Math.round(quizIdx/quizQueue.length*100);
+  document.getElementById('prog').style.width=pct+'%';
+  document.getElementById('prog-txt').textContent=`${quizIdx+1} / ${quizQueue.length}`;
+  document.getElementById('pts-badge').textContent=sessionPts+'pt';
+  const cb=document.getElementById('combo-badge');
+  if(combo>=2){cb.style.display='';cb.textContent=`🔥${combo}コンボ`;}else cb.style.display='none';
+  const lbEl=document.getElementById('q-lv-badge');
+  lbEl.className='q-level-badge '+lvClass(q.lv);
+  lbEl.textContent={BASIC:'BASIC',STANDARD:'STANDARD',ADVANCED:'ADVANCED'}[q.lv];
+  document.getElementById('q-unit-label').textContent=unitLabel(q.unit);
+  document.getElementById('q-text').textContent=q.q;
+  document.getElementById('exp-box').style.display='none';
+  document.getElementById('next-btn').style.display='none';
+  const choicesEl=document.getElementById('choices');
+  choicesEl.innerHTML='';
+  const shuffled=shuffle(q.choices.map((c,i)=>({c,i})));
+  shuffled.forEach(({c,i})=>{
+    const btn=document.createElement('button');
+    btn.className='choice-btn';btn.textContent=c;
+    btn.onclick=()=>answer(i,btn,q,shuffled);
+    choicesEl.appendChild(btn);
+  });
+  document.getElementById('quiz-body').scrollTop=0;
+}
+
+function answer(idx,btn,q,shuffled){
+  if(answered)return;
+  const correct=idx===q.ans;
+  const pts={BASIC:1,STANDARD:2,ADVANCED:3}[q.lv];
+  if(!correct){
+    btn.classList.add('wrong');
+    btn.disabled=true;
+    if(!firstMiss){
+      addWeak(q.id);
+      const s=loadStats();
+      const key1=isWeakMode?q.unit:currentUnit;
+      const key2=isWeakMode?(q.unit+'_'+(q.lv||'ALL')):(currentUnit+'_'+currentLevel);
+      if(!s[key1])s[key1]={correct:0,total:0};
+      s[key1].total++;
+      if(!s[key2])s[key2]={correct:0,total:0};
+      s[key2].total++;
+      saveStats(s);
+      firstMiss=true;combo=0;
+    }
+    return;
+  }
+  // 正解
+  answered=true;
+  const allBtns=document.querySelectorAll('.choice-btn');
+  allBtns.forEach(b=>b.disabled=true);
+  btn.classList.add('correct');
+  if(!firstMiss){
+    removeWeak(q.id);
+    sessionCorrect++;
+    combo++;
+    const earn=pts*(combo>=3?2:1);
+    sessionPts+=earn;
+    const s=loadStats();
+    const key1=isWeakMode?q.unit:currentUnit;
+    const key2=isWeakMode?(q.unit+'_'+(q.lv||'ALL')):(currentUnit+'_'+currentLevel);
+    if(!s[key1])s[key1]={correct:0,total:0};
+    s[key1].correct++;s[key1].total++;
+    if(!s[key2])s[key2]={correct:0,total:0};
+    s[key2].correct++;s[key2].total++;
+    saveStats(s);
+  }
+  document.getElementById('exp-box').style.display='';
+  document.getElementById('exp-box').textContent=q.exp;
+  document.getElementById('next-btn').style.display='';
+  document.getElementById('next-btn').textContent=quizIdx+1<quizQueue.length?'次の問題 →':'結果を見る';
+}
+
+function nextQ(){
+  quizIdx++;
+  if(quizIdx>=quizQueue.length)endQuiz();
+  else renderQuestion();
+}
+
+function endQuiz(){
+  document.getElementById('res-pts').textContent=sessionPts+'pt';
+  document.getElementById('res-correct').textContent=sessionCorrect;
+  document.getElementById('res-total').textContent=quizQueue.length;
+  document.getElementById('res-rate').textContent=Math.round(sessionCorrect/quizQueue.length*100)+'%';
+  const s=loadStats();
+  const units=['zenzen','taiki','tentai'];
+  const rows=document.getElementById('unit-stat-rows');
+  rows.innerHTML='';
+  units.forEach(u=>{
+    const st=s[u]||{correct:0,total:0};
+    if(st.total===0)return;
+    const rate=Math.round(st.correct/st.total*100);
+    rows.innerHTML+=`<div class="unit-stat-row"><div class="ust-name">${unitLabel(u)}</div><div class="ust-bar-wrap"><div class="ust-bar" style="width:${rate}%"></div></div><div class="ust-rate">${rate}%</div></div>`;
+  });
+  const weak=loadWeak();
+  const rwBtn=document.getElementById('result-weak-btn');
+  if(weak.length>0){rwBtn.style.display='';rwBtn.textContent=`🔥 苦手を特訓（${weak.length}問）`;}
+  else rwBtn.style.display='none';
+  showScreen('result');
+}
+
+function retryQuiz(){
+  if(isWeakMode)startWeak();
+  else{currentUnit=lastUnit;startQuiz(lastLevel);}
+}
+
+// ===== QUIT =====
+function confirmQuit(){document.getElementById('quit-modal').classList.add('show');}
+function closeQuit(){document.getElementById('quit-modal').classList.remove('show');}
+function doQuit(){closeQuit();showScreen('top');}
+
+// ===== INIT =====
+refreshTopStats();
+</script>
+</body>
+</html>
